@@ -22,5 +22,20 @@ bundle_list_25cb$'0'$feature_cols
 bundle_list_25cb$'0'$feature_cols
 
 
+######################################################################
+# So new dataframe with the participants need not only the features but also 
+# one column 'Sex'for gender (0 or 1, for female and male respectively) 
+# and one column 'age0' for age when the measurements were collected..
+#######################################################################
+
+# Recommend age from 37 to 82 as the model was trained on participants in this
+# age range, with minumum age of 27 for male and 30 for female
+# and maximum age of 92 for both, as this is the extrapolation limit of the
+# model. In other word, the model predicted BA would be between 27 and 92 for
+# male and between 30 and 92 for female.
+
+
+
+
 
 
