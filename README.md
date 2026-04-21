@@ -1,2 +1,4 @@
-# UKB-ageing
-UKB ageing related and ageing clock
+# XGBOOST-AFT ageing clock trained in the UK Biobank
+
+
+
