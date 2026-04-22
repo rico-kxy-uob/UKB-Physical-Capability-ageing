@@ -223,7 +223,7 @@ score_BAA_batch_Gompertz_fast_hybrid <- function(new_df, bundle_list) {
     PC_BAA <- raw_BAA - age_trend
     
     result[[part_id]] <- data.frame(
-      BA = BA,
+      PC_BA = BA,
       raw_BAA = raw_BAA,
       PC_BAA = PC_BAA,
       risk = risk,

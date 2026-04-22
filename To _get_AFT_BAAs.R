@@ -35,6 +35,20 @@ bundle_list_25cb$'0'$feature_cols
 # male and between 30 and 92 for female.
 
 
+#######################################################################################
+physical_demo<- read_csv("Demo dataset/Physical_measurements_demo.csv")
+
+physical_base_BAAs <- score_BAA_batch_Gompertz_fast_hybrid(physical_demo, bundle_list_10pm)
+# PC_BA is the predicted biological age, and PC_BAA is the predicted biological age acceleration (BAA)
+head(physical_base_BAAs)
+
+Physical_enhanced_BAAs <- score_BAA_batch_Gompertz_fast_hybrid(physical_demo, bundle_list_24pm)
+head(Physical_enhanced_BAAs)
+
+#########################################################################################
+blood_demo<- read_csv("Demo dataset/Blood_demo.csv")
+
+
 
 
 
