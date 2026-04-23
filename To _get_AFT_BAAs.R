@@ -17,9 +17,10 @@ names(bundle_list_24pm)
 names(bundle_list_24pm$'0')
 
 ### check the features each model needs 
+bundle_list_10pm$'0'$feature_cols
 bundle_list_24pm$'0'$feature_cols
 bundle_list_25cb$'0'$feature_cols
-bundle_list_25cb$'0'$feature_cols
+
 
 
 ######################################################################
@@ -48,7 +49,8 @@ head(Physical_enhanced_BAAs)
 #########################################################################################
 blood_demo<- read_csv("Demo dataset/Blood_demo.csv")
 
-
+AFT_blood_BAAs <- score_BAA_batch_Gompertz_fast_hybrid(blood_demo, bundle_list_25cb)
+head(AFT_blood_BAAs,10)
 
 
 
