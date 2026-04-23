@@ -61,33 +61,61 @@ score_BAA_batch_Gompertz_fast_hybrid <- function(new_df, bundle_list) {
   }
   
   # -----------------------------
-  # 3) Stable monotone inverse mapping from risk to BA
+  # 3) Closed-form inverse mapping from risk to BA
+  #    BA = (1 / C) * log((risk - A) / B)
+  #    Then clip BA to the stored reference age range
   # -----------------------------
-  inverse_from_grid <- function(risk, age_grid, risk_grid) {
+  inverse_gompertz_from_params <- function(risk, gm_params, age_grid) {
     out <- rep(NA_real_, length(risk))
     
-    if (length(age_grid) == 0 || length(risk_grid) == 0) {
+    # Sanity checks
+    if (length(age_grid) == 0 || !all(is.finite(age_grid))) {
       return(out)
     }
     
-    if (!all(is.finite(age_grid)) || !all(is.finite(risk_grid))) {
+    if (is.null(gm_params) || !all(c("A", "B", "C") %in% names(gm_params))) {
       return(out)
     }
+    
+    A <- as.numeric(gm_params["A"])
+    B <- as.numeric(gm_params["B"])
+    C <- as.numeric(gm_params["C"])
+    
+    # Closed-form inverse only makes sense when:
+    # - all parameters are finite
+    # - B > 0
+    # - C > 0
+    if (!all(is.finite(c(A, B, C))) || B <= 0 || C <= 0) {
+      return(out)
+    }
+    
+    age_min <- min(age_grid)
+    age_max <- max(age_grid)
     
     ok <- is.finite(risk)
-    if (!any(ok)) return(out)
+    if (!any(ok)) {
+      return(out)
+    }
     
-    iso_fit <- isoreg(age_grid, risk_grid)
-    risk_iso <- iso_fit$yf
-    keep <- !duplicated(risk_iso)
+    r_ok <- as.numeric(risk[ok])
     
-    out[ok] <- approx(
-      x = risk_iso[keep],
-      y = age_grid[keep],
-      xout = risk[ok],
-      rule = 2
-    )$y
+    # For risk <= A, the log argument is non-positive.
+    # Following the intended bounded calibration domain,
+    # map such values to the lower age boundary.
+    ba_ok <- rep(age_min, length(r_ok))
     
+    valid_idx <- (r_ok > A)
+    if (any(valid_idx)) {
+      ba_ok[valid_idx] <- (1 / C) * log((r_ok[valid_idx] - A) / B)
+    }
+    
+    # Clip to the reference age range stored in the bundle
+    ba_ok <- pmax(age_min, pmin(age_max, ba_ok))
+    
+    # Guard against any unexpected numerical issues
+    ba_ok[!is.finite(ba_ok)] <- NA_real_
+    
+    out[ok] <- ba_ok
     out
   }
   
@@ -122,9 +150,6 @@ score_BAA_batch_Gompertz_fast_hybrid <- function(new_df, bundle_list) {
     }
     if (is.null(b$age_grid) || length(b$age_grid) == 0) {
       stop("The bundle is missing a valid `age_grid`.")
-    }
-    if (is.null(b$risk_grid) || length(b$risk_grid) == 0) {
-      stop("The bundle is missing a valid `risk_grid`.")
     }
     if (is.null(b$gm_fit_age_range) || length(b$gm_fit_age_range) != 2) {
       stop("The bundle is missing a valid `gm_fit_age_range`.")
@@ -192,12 +217,12 @@ score_BAA_batch_Gompertz_fast_hybrid <- function(new_df, bundle_list) {
     risk <- -pred_margin
     
     # -----------------------------
-    # 5e) Risk -> BA
+    # 5e) Risk -> BA using the closed-form inverse
     # -----------------------------
-    BA <- inverse_from_grid(
+    BA <- inverse_gompertz_from_params(
       risk = risk,
-      age_grid = b$age_grid,
-      risk_grid = b$risk_grid
+      gm_params = b$gm_params,
+      age_grid = b$age_grid
     )
     
     raw_BAA <- BA - age_vec
@@ -245,24 +270,3 @@ score_BAA_batch_Gompertz_fast_hybrid <- function(new_df, bundle_list) {
   
   out
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
